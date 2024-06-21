@@ -1,0 +1,7 @@
+requests
+SpeechRecognition
+pyttsx3
+Pillow
+screeninfo
+pygetwindow
+pyautogui
