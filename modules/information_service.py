@@ -1,4 +1,6 @@
+from datetime import datetime
 from modules.input import get_monitors_info, get_windows_info
+from modules.output import speak
 
 def handle_monitore():
     monitore = get_monitors_info()
@@ -26,4 +28,5 @@ def handle_uhrzeit():
     print(timenow)
     speak(f"Es ist nun genau {timenow}")
     return True
+
    

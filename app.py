@@ -1,9 +1,5 @@
-import io
-import pyautogui
-import pyodbc
-import re
 import sys
-from datetime import datetime
+import re
 from dotenv import load_dotenv
 import threading
 from modules.information_service import *
@@ -16,28 +12,7 @@ from pydub.playback import play
 
 load_dotenv()
 
-global model
-
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-WAKE = "Jarvis" 
-model = "llama3"
-voice_id = "1suvBmcKlCTfzjRX7JAL"
-client = ElevenLabs(
-    api_key=ELEVENLABS_API_KEY,
-)
-
-# Liste der verfügbaren Stimmen mit ihren IDs
-voices = {
-    "Stefan": "aooilHhhdCuhtje0hCLx",
-    "Angie": "mfzvLIyvgTXSjgTnaRwB",
-    "Jens": "neD6Qt1SbhIelQYpHOVy",
-    "Schweinebacke": "pyp0ouVwQtR8K0UAmeO0",
-    "Onkel Monte": "tT5oqpuao9zAkCP1rldL",
-    "tiefer Jarvis": "WgV8ZPI6TnwXGf9zkN2O",
-    "Kevin": "RjXkcUtoePljvmTEjiYS",
-    "Anton": "BGtECcWHNy9MizUX3BIR",
-    "Original": "1suvBmcKlCTfzjRX7JAL"
-}
+WAKE = 'Jarvis'
 
 # Liste der Befehle für handler functions
 commands = {

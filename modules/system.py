@@ -7,7 +7,8 @@ import pyautogui
 import speech_recognition as sr
 from screeninfo import get_monitors
 import pygetwindow as gw
-from modules.output import handle_music, stop_music
+from modules.output import handle_music, stop_music,speak
+from modules.input import get_audio
 
 def check_command(input_text, *keywords):
     return all(keyword.lower() in input_text.lower() for keyword in keywords)
@@ -158,28 +159,18 @@ def handle_wechsel_sprachmodell():
             speak("Modell wurde angepasst")
             loop = False
         elif any(word in model_choice for word in ["casual", "unterhaltung", "smalltalk", "Small talk"]):
+            wizardlm2
             model = "llama3"
             speak("Ok, ab jetzt also gemütlich.")
+            loop = False
+        elif any(word in model_choice for word in ["Gangster", "Zauberer", "Magie", "Zauberei"]):
+            model = "wizardlm2"
+            speak("Ok, ab jetzt übernehme ich keine Gewährleistung mehr. Das Nutzen dieser Fähigkeiten birgt ein gewisses Risiko. Wizard LM aktiviert. Viel Spaß.")
             loop = False
         else:
             speak("Das habe ich nicht verstanden!")
     return True
 
-def handle_stimmenwechsel():
-    # Die verfügbaren Stimmen dynamisch aus der Liste abrufen
-    available_voices = ", ".join(voices.keys())
-    speak(f"Welche Stimme soll es sein? Verfügbare Stimmen sind: {available_voices}")
-    stimme_input = get_audio().strip()
-
-    # Stimme ändern, wenn sie in der Liste verfügbar ist
-    if stimme_input in voices:
-        global voice_id
-        voice_id = voices[stimme_input]
-        speak(f"Die Stimme wurde auf {stimme_input} geändert.")
-    else:
-        speak(f"Entschuldigung, die Stimme {stimme_input} ist nicht verfügbar.")
-    return True
-    
 def handle_specific_command(command: str):
     """
     Funktion zur Verarbeitung spezifischer Befehle wie "starte Spotify".

@@ -9,6 +9,7 @@ import pyttsx3
 from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
+from modules.input import get_audio
 
 load_dotenv()
 
@@ -17,8 +18,14 @@ client = ElevenLabs(
     api_key=ELEVENLABS_API_KEY,
 )
 
+global model 
+model = "llama3"
+
 global is_playing
 is_playing = False
+
+voice_id = "1suvBmcKlCTfzjRX7JAL"
+
 
 def use_talker(prompt: str, model: str):
     api_url = "http://127.0.0.1:11434/api/generate"
@@ -113,3 +120,31 @@ def handle_music():
     global is_playing
     file_path = "F:/Come non vorrei vorrei non amarti.mp3"
     threading.Thread(target=play_mp3, args=(file_path,)).start()
+    
+def handle_stimmenwechsel():
+    # Liste der verfügbaren Stimmen mit ihren IDs
+    voices = {
+        "Stefan": "aooilHhhdCuhtje0hCLx",
+        "Angie": "mfzvLIyvgTXSjgTnaRwB",
+        "Jens": "neD6Qt1SbhIelQYpHOVy",
+        "Schweinebacke": "pyp0ouVwQtR8K0UAmeO0",
+        "Onkel Monte": "tT5oqpuao9zAkCP1rldL",
+        "tiefer Jarvis": "WgV8ZPI6TnwXGf9zkN2O",
+        "Kevin": "RjXkcUtoePljvmTEjiYS",
+        "Anton": "BGtECcWHNy9MizUX3BIR",
+        "Original": "1suvBmcKlCTfzjRX7JAL"
+    }
+    # Die verfügbaren Stimmen dynamisch aus der Liste abrufen
+    available_voices = ", ".join(voices.keys())
+    speak(f"Welche Stimme soll es sein? Verfügbare Stimmen sind: {available_voices}")
+    stimme_input = get_audio().strip()
+
+    # Stimme ändern, wenn sie in der Liste verfügbar ist
+    if stimme_input in voices:
+        global voice_id
+        voice_id = voices[stimme_input]
+        speak(f"Die Stimme wurde auf {stimme_input} geändert.")
+    else:
+        speak(f"Entschuldigung, die Stimme {stimme_input} ist nicht verfügbar.")
+    return True
+    
