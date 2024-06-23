@@ -4,6 +4,7 @@ import pyodbc
 import subprocess
 import time
 import pyautogui
+import webbrowser
 import speech_recognition as sr
 from screeninfo import get_monitors
 import pygetwindow as gw
@@ -96,50 +97,64 @@ def move_window_to_monitor(window_title: str):
         print("Fenster mit dem Titel, der auf " + window_title + " endet, nicht gefunden.")
         
 def start_exe(programm_name: str):
-    programm_name = programm_name.lower()
-    # exe_path = None
-    
-    if any(word in programm_name for word in ["spotify", "musik", "lieblingssongs"]):
-       start_spotify()
-    
-    # if exe_path is None:
-    #     print(f"Programm passend zu '{programm_name}' nicht gefunden.")
-    #     return
-    
-    # if not os.path.isfile(exe_path):
-    #     raise FileNotFoundError(f"Die Datei {exe_path} wurde nicht gefunden.")
-    
-    # try:
-    #     # Starten der Verknüpfung
-    #     os.startfile(exe_path)
-    # except Exception as e:
-    #     print(f"Ein Fehler ist beim Ausführen des Programms aufgetreten: {e}")
-    # return True
+    return True
 
-def start_spotify():
-    batch_file = "C:\\Users\\rubir\\Desktop\\start_spotify.bat"
+def start_process(process:str):
+    script_dir = os.path.dirname(__file__)  # Verzeichnis des aktuellen Skripts
+    batch_files = {
+        "camfrog": "camfrog.bat",
+        "spotify": "spotify.bat",
+        "firefox": "firefox.bat",
+        "notepad": "notepad.bat",
+        "vscode":  "vscode.bat"
+    }
 
-    if not os.path.isfile(batch_file):
-        raise FileNotFoundError(f"Die Datei {batch_file} wurde nicht gefunden.")
+    batch_file = os.path.join(script_dir, "..", "batch-folder", batch_files.get(process))
+    
+    if batch_file:
+        try:
+            # Starten der Batch-Datei
+            subprocess.run([batch_file], shell=True)
+            time.sleep(5)
+            pyautogui.press('space')
+        except subprocess.CalledProcessError as e:
+            print(f"Fehler beim Ausführen der Batch-Datei: {e}")
+        except Exception as e:
+            print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
+    else:
+        print(f"Keine Batch-Datei für den Prozess '{process}' gefunden.")
 
-    try:
-        # Starten der Batch-Datei
-        subprocess.run([batch_file], shell=True)
-        time.sleep(5)
-        pyautogui.press('space')
-    except subprocess.CalledProcessError as e:
-        print(f"Fehler beim Ausführen der Batch-Datei: {e}")
-    except Exception as e:
-        print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
 
 def handle_verschiebe_videochat():
     move_window_to_monitor("Videochat")
     return True
 
-def handle_starte_programm():
+def  handle_starte_programm():
     speak("Welches Programm soll ich starten?")
     programm_name = get_audio()
-    start_exe(programm_name)
+    programm_name_lower = programm_name.lower()
+
+    program_names = {
+        "camfrog": ["Videochat", "camfrog", "video chat", "kamera chat", "frosch"],
+        "spotify": ["spotify", "musik"],
+        "firefox": ["firefox", "browser", "webbrowser"],
+        "notepad": ["notepad", "editor", "texteditor"],
+        "vscode": ["vscode", "code", "visual studio code", "cursor", "vscodium"],
+    }
+
+    # Finden des korrekten Schlüssels für den gegebenen Programmnamen
+    found_program = None
+    
+    for key, names in program_names.items():
+        if programm_name_lower in [name.lower() for name in names]:
+            found_program = key
+            break
+
+    if found_program:
+        start_process(found_program)
+    else:
+        speak("Ich habe dich nicht verstanden, bitte wiederhole das nochmal.")
+    
     return True
 
 def handle_verschiebe_fenster():
@@ -159,7 +174,6 @@ def handle_wechsel_sprachmodell():
             speak("Modell wurde angepasst")
             loop = False
         elif any(word in model_choice for word in ["casual", "unterhaltung", "smalltalk", "Small talk"]):
-            wizardlm2
             model = "llama3"
             speak("Ok, ab jetzt also gemütlich.")
             loop = False
@@ -191,8 +205,11 @@ def handle_specific_command(command: str):
     return False  # Befehl nicht erkannt
 
 def handle_bilder():
-    # Code für Bilder anzeigen
-    pass
+    speak("Welches Bild mchten Sie suchen?")
+    searchterm = get_audio()
+    search_url = "https://www.google.com/search?q=" + searchterm + "&tbm=isch"
+    webbrowser.open(search_url)
+    return True
 
 def handle_fenster():
     # Code für Fensterinformationen abrufen
