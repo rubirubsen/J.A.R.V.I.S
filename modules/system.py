@@ -5,44 +5,44 @@ import subprocess
 import time
 import pyautogui
 import webbrowser
+import random
+import ctypes
 import speech_recognition as sr
 from screeninfo import get_monitors
 import pygetwindow as gw
 from modules.output import handle_music, stop_music,speak
 from modules.input import get_audio
+from modules.sql import connect_to_mssql
+
+global model
+model = "gemma2:2b"
 
 def check_command(input_text, *keywords):
     return all(keyword.lower() in input_text.lower() for keyword in keywords)
-
-def connect_to_mssql(server, database, username, password):
-    """
-    Connect to a Microsoft SQL Server database using pyodbc.
-
-    Args:
-        server (str): The server name or IP address.
-        database (str): The database name.
-        username (str): The username to use for the connection.
-        password (str): The password to use for the connection.
-
-    Returns:
-        A pyodbc connection object if the connection is successful, None otherwise.
-    """
-    conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
-    try:
-        conn = pyodbc.connect(conn_str)
-        return conn
-    except pyodbc.Error as e:
-        print(f"Error connecting to database: {e}")
-        return None
-
-def handle_shutdown():
-    speak('Alles klar, gute Nacht - du mörder!')
-    print("User cancelled the AI - successful")
-    sys.exit(1)
     
 def handle_deaktivieren():
     speak("Okay, ich warte auf das nächste Aktivierungswort.")
     return True  # Continue loop
+
+def aktives_fenster_minimieren():
+    aktives_fenster = gw.getActiveWindow()
+    if aktives_fenster:
+        ctypes.windll.user32.ShowWindow(ctypes.windll.user32.GetForegroundWindow(), 6)  # 6 = Minimieren
+        speak(f"Fenster '{aktives_fenster.title}' wurde minimiert.")
+        return True
+    else:
+        speak("Kein aktives Fenster gefunden.")
+        return False
+
+def aktives_fenster_schliessen():
+    aktives_fenster = gw.getActiveWindow()
+    if aktives_fenster:
+        ctypes.windll.user32.PostMessageW(ctypes.windll.user32.GetForegroundWindow(), 0x0010, 0, 0)  # 0x0010 = WM_CLOSE
+        speak(f"Fenster '{aktives_fenster.title}' wurde geschlossen.")
+        return True
+    else:
+        speak("Kein aktives Fenster gefunden.")
+        return False
 
 def move_window_to_monitor(window_title: str):
     window_title = window_title
@@ -101,6 +101,7 @@ def start_exe(programm_name: str):
 
 def start_process(process:str):
     script_dir = os.path.dirname(__file__)  # Verzeichnis des aktuellen Skripts
+    
     batch_files = {
         "camfrog": "camfrog.bat",
         "spotify": "spotify.bat",
@@ -124,14 +125,15 @@ def start_process(process:str):
     else:
         print(f"Keine Batch-Datei für den Prozess '{process}' gefunden.")
 
-
 def handle_verschiebe_videochat():
     move_window_to_monitor("Videochat")
     return True
 
-def  handle_starte_programm():
+def handle_starte_programm():
     speak("Welches Programm soll ich starten?")
     programm_name = get_audio()
+    print("verstanden:", programm_name)
+
     programm_name_lower = programm_name.lower()
 
     program_names = {
@@ -205,7 +207,15 @@ def handle_specific_command(command: str):
     return False  # Befehl nicht erkannt
 
 def handle_bilder():
-    speak("Welches Bild mchten Sie suchen?")
+    saetzeBilder = [
+        "Bilder wovon?",
+        "Welche Bilder möchtest Du denn sehen?",
+        "Bitte spezifiziere den Suchbegriff für Bilder",
+        "Ich zeig Dir gleich Bilder... wenn Du mir sagst was du sehen willst?"
+    ]
+    zufaelligerSatz = random.choice(saetzeBilder)
+
+    speak(zufaelligerSatz)
     searchterm = get_audio()
     search_url = "https://www.google.com/search?q=" + searchterm + "&tbm=isch"
     webbrowser.open(search_url)

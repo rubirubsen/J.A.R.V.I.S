@@ -1,7 +1,9 @@
 import os
 import json
-import pyodbc
+from modules.sql import connect_to_mssql
+from modules.output import speak
 from dotenv import load_dotenv
+
 load_dotenv()
 
 def handle_einkaufsliste():
@@ -10,13 +12,23 @@ def handle_einkaufsliste():
     database = os.getenv("SQL_DATABASE")
     username = os.getenv("SQL_USERNAME")
     password = os.getenv("SQL_PASSWORD")
+    
+    print(server, database,username,password)
+
+    # Verbindung zur MSSQL-Datenbank herstellen
     conn = connect_to_mssql(server, database, username, password)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM shopping_list")
-    results = cursor.fetchall()
-    antwort = construct_sentence(results)
-    speak(antwort)
-    return True
+    
+    if conn:
+        cursor = conn.cursor()  # Cursor erstellen
+        cursor.execute("SELECT * FROM shopping_list")  # SQL-Abfrage ausführen
+        results = cursor.fetchall()  # Ergebnisse der Abfrage holen
+        antwort = construct_sentence(results)  # Antwort konstruieren
+        speak(antwort)  # Antwort sprechen
+        conn.close()  # Verbindung schließen
+        return True
+    else:
+        print("Fehler bei der Verbindung zur Datenbank.")
+        return False
 
 def construct_sentence(results):
     sentence = "Auf der Einkaufsliste stehen: "
