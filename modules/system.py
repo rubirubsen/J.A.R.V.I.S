@@ -224,3 +224,12 @@ def handle_bilder():
 def handle_fenster():
     # Code für Fensterinformationen abrufen
     pass
+
+def handle_monitore():
+    monitore = get_monitors_info()
+    print("Monitore: ")
+    print(monitore)
+    fenster = get_windows_info()
+    print("Fenster: ")
+    print(fenster)
+    return True
