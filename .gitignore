@@ -3,4 +3,5 @@
 *.pt
 __pycache__/
 .venv/*
-./modules/helper/emails.json
+.gitignore
+modules/helper/emails.json
