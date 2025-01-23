@@ -1,24 +1,21 @@
 import sys
 import re
-import tkinter as tk
 import signal
-from tkinter import messagebox
-from dotenv import load_dotenv
 import threading
 import websocket
 import json  
 from pydub import AudioSegment
 from pydub.playback import play
+from dotenv import load_dotenv
+
 from modules.processing.system.system import *
-from modules.processing.audio.audio_processor import *
-from modules.input.speech.input import *
-from modules.output.speech.speaker import speak, use_talker
-from modules.processing.database.shopping_list import *
+from modules.processing.audio.audio_processor import handle_music, stop_music
+from modules.input.speech.input import get_audio
+from modules.output.speech.speaker import speak, use_talker, read_chat
+from modules.processing.database.shopping_list import handle_einkaufsliste, format_shopping_list_sql_results
 from modules.services.spotify import *
 from modules.services.twitch import *
 
-from playsound import playsound
-from pydub.playback import play
 
 load_dotenv()
 AudioSegment.converter = 'C:/ffmpeg'
