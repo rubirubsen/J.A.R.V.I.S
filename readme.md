@@ -1,5 +1,5 @@
-#JARVIS
+# JARVIS
 
-*LLM-Support
-*IMAP-Checker
-*TTS + STT
+* LLM-Support
+* IMAP-Checker
+* TTS + STT
