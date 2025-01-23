@@ -57,4 +57,3 @@ def handle_uhrzeit():
     speak(f"Es ist nun genau {timenow}")
     return True
 
-   

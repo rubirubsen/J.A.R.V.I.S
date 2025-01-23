@@ -10,7 +10,7 @@ import ctypes
 import speech_recognition as sr
 from screeninfo import get_monitors
 import pygetwindow as gw
-from modules.output import handle_music, stop_music,speak
+from modules.output import handle_music, stop_music,speak,bilderSuchePrompt, bilderSucheExec
 from modules.input import get_audio
 from modules.sql import connect_to_mssql
 
@@ -194,7 +194,7 @@ def handle_specific_command(command: str):
     command = command.lower()
 
     if "spotify" in command:
-        start_exe("Spotify")
+        start_process("Spotify")
         return True
     elif "musik anhalten" in command:
         stop_music()
@@ -207,18 +207,16 @@ def handle_specific_command(command: str):
     return False  # Befehl nicht erkannt
 
 def handle_bilder():
-    saetzeBilder = [
-        "Bilder wovon?",
-        "Welche Bilder möchtest Du denn sehen?",
-        "Bitte spezifiziere den Suchbegriff für Bilder",
-        "Ich zeig Dir gleich Bilder... wenn Du mir sagst was du sehen willst?"
-    ]
-    zufaelligerSatz = random.choice(saetzeBilder)
-
-    speak(zufaelligerSatz)
-    searchterm = get_audio()
-    search_url = "https://www.google.com/search?q=" + searchterm + "&tbm=isch"
+    
+    searchterm = bilderSuchePrompt()
+    searchterm2 = bilderSucheExec(searchterm)
+    search_url = "https://www.google.com/search?q=" + searchterm2 + "&tbm=isch"
     webbrowser.open(search_url)
+    for window in gw.getWindowsWithTitle(''):
+        if "Google Chrome" in window.title or "Mozilla Firefox" in window.title or "Microsoft Edge" in window.title:
+            window.activate()
+            break
+    speak('Sollten sie noch etwas brauchen sagen sie bescheid.')
     return True
 
 def handle_fenster():

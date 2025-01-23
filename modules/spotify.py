@@ -1,32 +1,20 @@
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from modules.output import *
 
-# Spotify API-Konfiguration (füge hier deine eigenen Daten ein)
-SPOTIFY_CLIENT_ID = "dein_client_id"
-SPOTIFY_CLIENT_SECRET = "dein_client_secret"
-SPOTIFY_REDIRECT_URI = "http://localhost:8888/callback"
-SCOPE = "user-read-playback-state user-modify-playback-state playlist-modify-private"
+songTitle = ''
+songArtist = ''
 
-# Authentifizierung
-spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
-    client_id=SPOTIFY_CLIENT_ID,
-    client_secret=SPOTIFY_CLIENT_SECRET,
-    redirect_uri=SPOTIFY_REDIRECT_URI,
-    scope=SCOPE
-))
-
+def set_title_playing(title, artist):
+    global songTitle
+    songTitle= title
+    global songArtist
+    songArtist= artist
+    return
 
 def get_title_playing():
-    """Gibt den Titel des aktuell gespielten Songs zurück."""
-    try:
-        playback = spotify.current_playback()
-        if playback and playback.get("is_playing"):
-            track = playback["item"]
-            return f"{track['name']} by {', '.join(artist['name'] for artist in track['artists'])}"
-        return "Aktuell wird nichts abgespielt."
-    except Exception as e:
-        return f"Fehler: {e}"
-
+    global songTitle
+    global songArtist
+    speak(f'Wir hören {songTitle} von {songArtist}. Gefällt es Dir?')
+    return True
 
 def get_playback_state():
     """Gibt den aktuellen Wiedergabestatus zurück."""

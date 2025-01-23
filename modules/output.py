@@ -72,12 +72,12 @@ def use_talker(prompt: str, model: str):
     return answer
 
 def speak(answer: str):
-    text_to_speech(answer)
-    # engine = pyttsx3.init()
-    # engine.setProperty('rate', 175)
-    # engine.setProperty('voice', 'Hans RSI Harpo 22kHz')
-    # engine.say(answer)
-    # engine.runAndWait()
+    # text_to_speech(answer)
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 175)
+    engine.setProperty('voice', 'Hans RSI Harpo 22kHz')
+    engine.say(answer)
+    engine.runAndWait()
 
 def text_to_speech(text: str):
     # Calling the text_to_speech conversion API with detailed parameters
@@ -109,9 +109,6 @@ def text_to_speech(text: str):
     # Playing the audio file
     play_mp3(save_file_path)
     time.sleep(1)
-
-    # Remove the audio file
-    os.remove(save_file_path)
 
 def handle_stimmenwechsel():
     # Liste der verfügbaren Stimmen mit ihren IDs
@@ -161,11 +158,11 @@ def play_mp3(file_path: str):
         is_playing = False
         time.sleep(0.5)  # Ein kleiner Sleep, um sicherzustellen, dass die Musik wirklich gestoppt ist
         try:
+            pygame.mixer.music.unload()
             os.remove(file_path)  # Datei nach dem Abspielen löschen
             print(f"{file_path} wurde gelöscht.")
         except PermissionError:
             print(f"Fehler: {file_path} kann nicht gelöscht werden. Wird noch von einem Prozess verwendet.")
-
 
 def stop_music():
     global is_playing
@@ -207,7 +204,7 @@ def read_chat(text: str , username:str):
         "erik_zev":"pyp0ouVwQtR8K0UAmeO0",
         "completabledev":"BGtECcWHNy9MizUX3BIR",
         "schwatvogel":"TX3LPaxmHKxFdv7VOQHJ",
-        "mrn00bis":"pqHfZKP75CvOlQylNhV4",
+        "mr_n00bis":"pqHfZKP75CvOlQylNhV4",
         "radioante":"nPczCjzI2devNBz1zQrb",
         "demonic_medusa":"Xb7hH8MSUJpSbSDYk0k2",
         "xhorror":"N2lVS1w4EtoT3dr4eOWO",
@@ -256,9 +253,6 @@ def chat_to_speech(text: str,voice_id:str):
     play_mp3(save_file_path)
     time.sleep(1)
 
-    # Remove the audio file
-    os.remove(save_file_path)
-
 def aktuelleNachrichten():
     global is_playing
 
@@ -295,3 +289,102 @@ def aktuelleNachrichten():
         else:
             print("Music is already playing.")
             return False
+        
+def bilderSuchePrompt():
+    """
+    Funktion zur Erstellung einer generativen Abfrage für die Bildersuche.
+    Fragt den Benutzer nach einem Suchbegriff und verarbeitet diesen weiter.
+    """
+    url = "http://localhost:11434/api/generate"
+
+    # Payload für die Anfrage
+    payload = json.dumps({
+        "model": "llama3",
+        "prompt": "Du bist ein AI Assistent. Frage mich, welche Bilddateien bei Google ich suche. Wahlweise sarkastisch, ironisch oder roboterähnlich. Nur in Deutsch und maximal 30 Wörter.",
+        "stream": False
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        # Anfrage an den lokalen API-Endpunkt
+        response = requests.post(url, headers=headers, data=payload)
+        response_data = response.json()
+
+        # AI-Antwort ausgeben und Benutzerinput holen
+        print("AI:", response_data["response"])
+        speak(response_data["response"])  # Funktion spricht die Antwort
+        searchterm = get_audio()  # Benutzer gibt Suchbegriff ein
+
+        if not searchterm:
+            raise ValueError("Kein Suchbegriff erkannt.")
+
+        # Weiterverarbeitung des Suchbegriffs
+        searchterm2 = bilderSucheExec(searchterm)
+        return searchterm2
+
+    except requests.exceptions.RequestException as e:
+        print(f"Fehler bei der API-Anfrage (Prompt): {e}")
+        return None
+    except KeyError as e:
+        print(f"Fehler in der API-Antwort (Prompt): {e}")
+        return None
+    except ValueError as e:
+        print(f"Benutzereingabe fehlgeschlagen: {e}")
+        return None
+
+def bilderSucheExec(searchterm):
+    """
+    Funktion zur Verarbeitung des Suchbegriffs.
+    Ruft die API auf, um den Suchbegriff in ein sauberes JSON-Format zu bringen.
+    """
+    url = "http://localhost:11434/api/generate"
+
+    # Payload für die Anfrage
+    payload = json.dumps({
+        "model": "gemma2:2b",
+        "prompt": f"{searchterm}. Filtere diese Aussage nach einem Suchobjekt und gib mir dieses als Wert 'searchTerm' in einem JSON zurück. Keine weiteren Kommentare, nur das JSON.",
+        "stream": False
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        # Anfrage an den lokalen API-Endpunkt
+        response = requests.post(url, headers=headers, data=payload)
+        response_data = response.json()
+
+        # Ausgabe und Verarbeitung des Ergebnisses
+        print("Antwort von API (Exec):", response_data)
+
+        if "response" not in response_data:
+            raise KeyError("Die API-Antwort enthält keinen 'response'-Schlüssel.")
+
+        # Entferne Markdown-Backticks und parse das JSON
+        raw_response = response_data["response"]
+        clean_response = raw_response.strip("```json").strip("```").strip()
+        print('+++CLEAN+++: ',clean_response)
+        json_response = json.loads(clean_response)
+
+        # Extrahiere den Suchbegriff
+        searchterm_cleaned = json_response.get("searchTerm")
+
+        if not searchterm_cleaned:
+            raise ValueError("Kein Suchobjekt gefunden.")
+
+        return searchterm_cleaned
+
+    except requests.exceptions.RequestException as e:
+        print(f"Fehler bei der API-Anfrage (Exec): {e}")
+        return None
+    except KeyError as e:
+        print(f"Fehler in der API-Antwort (Exec): {e}")
+        return None
+    except ValueError as e:
+        print(f"Verarbeitung des Suchbegriffs fehlgeschlagen: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"Fehler beim JSON-Parsing: {e}")
+        return None,
