@@ -12,6 +12,7 @@ load_dotenv()
 pygame.init()
 pygame.mixer.init()
 
+print('git suckx ass')
 
 def process_messages():
     while True:
