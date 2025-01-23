@@ -2,115 +2,46 @@ import sys
 import re
 import signal
 import threading
-import websocket
 import json  
 from pydub import AudioSegment
 from pydub.playback import play
 from dotenv import load_dotenv
-
 from modules.processing.system.system import *
 from modules.processing.audio.audio_processor import handle_music, stop_music
 from modules.input.speech.input import get_audio
 from modules.output.speech.speaker import speak, use_talker, read_chat
+from modules.output.speech.readaloud import *
 from modules.processing.database.shopping_list import handle_einkaufsliste, format_shopping_list_sql_results
+from modules.processing.websocket.wsprocess import *
 from modules.services.spotify import *
 from modules.services.twitch import *
-
 
 load_dotenv()
 AudioSegment.converter = 'C:/ffmpeg'
 WAKE = 'Jarvis'
-model = 'Llama3'
-ws = None
+WAKE_alt = 'Buddy'
+model = 'llama3.2:latest'
+
 readAloutSwitch = 0
-
-wsurl = 'wss://rubizockt.de:3000?uid='+os.getenv('WSSECRET')+'&client_type=jarvis'
-
-def on_message(ws, message):
-    try:
-        # Versuche, die Nachricht in ein Dictionary zu parsen
-        message_data = json.loads(message)
-        
-        # Prüfe, ob das Feld 'cmd' in den empfangenen Daten existiert
-        if 'cmd' in message_data:
-            if message_data['cmd'] == 'trackUpdate':
-                print("track update")
-            elif message_data['cmd'] == 'trigger':
-                return
-            elif message_data['cmd'] == 'chatMessage' and readAloutSwitch == 1:
-                # Extrahiere die Nachricht und den Benutzernamen, wenn verfügbar
-                message_text = message_data.get('message', '')  # Verwende .get(), um einen Fehler zu vermeiden
-                
-                # Überprüfe, ob die Nachricht mit "!" beginnt oder vom Benutzer "rubizockt" kommt
-                if message_text.startswith('!') or message_data['tags'].get('username') == 'rubizockt':
-                    return  # Nachricht wird ignoriert
-                
-                # Wenn die Nachricht keine der oben genannten Bedingungen erfüllt
-                print('MESSAGE:', message_text)
-                username = message_data['tags'].get('username', 'Unbekannter Benutzer')  # Verwendet .get() für Sicherheit
-                print('USER: ', username)
-                read_chat(message_text, username)  # Weitergabe der Nachricht an die Funktion zum Vorlesen
-
-            elif message_data['cmd'] == 'notPlaying':
-                track_info = message_data.get('trackInfo', 'Keine Track-Info verfügbar')
-                print(track_info)
-    
-    except json.JSONDecodeError:
-        print("Fehler beim Decodieren der Nachricht: ", message)
-
-def on_error(ws, error):
-    print(f"Error occurred: {error}")
-
-def on_close(ws, close_status_code, close_msg):
-    print("### closed ###")
-
-def on_open(ws):
-    ws.send('{"cmd":"welcomeCall", "data":"Hello Server!"}')
-    print("WebSocket connection opened")
-
-def stop_websocket(signum, frame):
-    print("Stopping WebSocket...")
-    ws.close()
-    sys.exit(1)
-
 
 signal.signal(signal.SIGINT, stop_websocket)
 
-def run_websocket():
-    global ws
-    websocket.enableTrace(True)
-    ws = websocket.WebSocketApp(wsurl,
-                                on_message=on_message,
-                                on_error=on_error,
-                                on_close=on_close,
-                                on_open=on_open)
-    try:
-        ws.run_forever()
-    except KeyboardInterrupt:
-        print("WebSocket connection interrupted")
-        ws.close()
-        sys.exit(0)
-
-def handle_vorlesen_an():
-    global readAloutSwitch
-    readAloutSwitch = 1
-    speak('Mögen die Stimmen dich in deinen Träumen verfolgen.')
-    return True
-
-def handle_vorlesen_aus():
-    global readAloutSwitch
-    readAloutSwitch = 0
-    speak('Und jetzt halten alle gepflegt die Schnauze!')
-    return True
+thread = threading.Thread(target=run_websocket)
+thread.start()
 
 def handle_shutdown():
     speak('Alles klar, gute Nacht - du mörder!')
     print("User cancelled the AI - successful")
+    stop_websocket()
     thread.join()
     sys.exit(1)
 
-thread = threading.Thread(target=run_websocket)
-thread.start()
+def messageToServer():
+    if ws:
+        ws.send('Hello Server!')
+    else:
+        print("WebSocket is not connected.")
+
 
 # Liste der Befehle für handler functions
 commands = {
@@ -139,24 +70,18 @@ commands = {
     "nachrichten": aktuelleNachrichten
 }
 
-def messageToServer():
-    if ws:
-        ws.send('Hello Server!')
-    else:
-        print("WebSocket is not connected.")
-
 while True:  #immer
     try:  
         print("Höre zu...")
         user_input = get_audio()
 
-        if WAKE.lower() in user_input.lower():
-            if user_input.lower() == "jarvis":
+        if (WAKE.lower() in user_input.lower()) or (WAKE_alt.lower() in user_input.lower()):
+            if (user_input.lower() == WAKE.lower()) or (user_input.lower() == WAKE_alt.lower()):
                 speak('Ja bitte?')
                 continue
             else:
                 lower_case_input = user_input.lower()
-                lower_case_input = re.sub(r"(?i)jarvis", "", lower_case_input).strip()
+                lower_case_input = re.sub(r"(?i)jarvis|buddy", "", lower_case_input).strip()
                 print("Erkannte Worte: "+lower_case_input)
                 
                 if handle_specific_command(lower_case_input):
@@ -170,7 +95,7 @@ while True:  #immer
                     
                 else:
                     answer = use_talker(lower_case_input, model)
-                    print("Jarvis: " + answer)
+                    print("::AI:: " + answer)
                     speak(answer)
                     
     except KeyboardInterrupt:
