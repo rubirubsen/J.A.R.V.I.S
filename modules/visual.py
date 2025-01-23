@@ -9,7 +9,7 @@ pygame.init()
 pygame.display.set_caption('JARVIS')
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
-mp3_long = "C:\dev\python\jetson\modules\1f1def52-a2e9-404b-a111-636d8c11c4e1.mp3"
+mp3_long = "C:\dev\python\Jetson\jarvis.mp3"
 
 #PyAudio Initialisierung
 CHUNK = 1024
@@ -46,7 +46,7 @@ def draw_sine_wave(amplitude):
         points.append((0, screen_height/2))
         points.append((screen_width, screen_height /2 ))
         
-    pygame.draw.lines(screen, (255,255,0), False,points, 2) 
+    pygame.draw.lines(screen, (255,255,255), False,points, 2) 
     pygame.display.flip()
     
     

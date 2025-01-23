@@ -24,11 +24,12 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Audio Equalizer")
 
 # Pfade zu den Audio-Dateien
-mp3_file = "C:/dev/python/jetson/modules/1f1def52-a2e9-404b-a111-636d8c11c4e1.mp3"
+mp3_file = "C:/dev/python/jetson/modules/DeepJarvis_ivc_s60_sb70_se13_b_m2.mp3"
 wav_file = "C:/dev/python/jetson/modules/output.wav"
 
 # Konvertiere MP3 nach WAV
 convert_mp3_to_wav(mp3_file, wav_file)
+print('CONVERT DONE', wav_file)
 
 # Audio-Datei öffnen
 wave_file = wave.open(wav_file, 'rb')
@@ -106,7 +107,7 @@ while running:
             # Skalierung der Amplitude für die Darstellung mit Dämpfung der tieferen Frequenzen
             max_amplitude = 2**(sample_width*8-1)
             if band_index < 4:  # Die ersten 4 Bänder (Bass) werden gedämpft
-                bar_height = int((band_amplitude / max_amplitude) * (height / 2) * 0.35)  # Reduzierte Skalierung für Bass
+                bar_height = int((band_amplitude / max_amplitude) * (height / 2) * 0.25)  # Reduzierte Skalierung für Bass
             else:
                 bar_height = int((band_amplitude / max_amplitude) * (height / 2))
             
