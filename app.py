@@ -57,6 +57,7 @@ commands = {
     "spiele musik": handle_music,
     "stoppe musik" : stop_music,
     "starte programm": handle_starte_programm,
+    "welcher titel": get_title_playing,
     "verschiebe videochat fenster": handle_verschiebe_videochat,
     "verschiebe fenster": handle_verschiebe_fenster,
     "wechsel sprachmodell": handle_wechsel_sprachmodell,
