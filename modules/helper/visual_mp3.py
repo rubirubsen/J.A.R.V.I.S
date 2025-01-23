@@ -12,8 +12,28 @@ def convert_mp3_to_wav(mp3_path, wav_path):
 
 # Funktion zur Erzeugung von Regenbogenfarben
 def get_rainbow_color(index, total):
-    hue = index / total
-    return tuple(int(x * 255) for x in colorsys.hsv_to_rgb(hue, 1.0, 1.0))
+    """
+    Rufe eine Farbe des Regenbogens ab, basierend auf dem angegebenen Index und der Gesamtzahl der Farben.
+    
+    Parameters:
+    index (int): Der Index der gewünschten Farbe.
+    total (int): Die Gesamtzahl der Farben.
+    
+    Returns:
+    tuple: Ein RGB-Farbtupel, repräsentiert als eine Tupel aus drei Werten zwischen 0 und 255.
+    """
+    # Berechne den Hue-Wert
+    hue = index / total + 0.5
+    
+    # Verwende die HSV-Formel mit einer konstanten Saturation (1.0) und Variablen für die Intensität
+    saturation = 0.8
+    intensity = 0.9
+    
+    # Konvertiere den HSV-Wert in ein RGB-Farbtupel
+    rgb = colorsys.hsv_to_rgb(hue, saturation, intensity)
+    
+    # Runde die RGB-Werte auf zwei Dezimalstellen ab und wandele sie in ganze Zahlen um
+    return tuple(int(round(x * 255)) for x in rgb)
 
 # Initialisieren von Pygame
 pygame.init()
@@ -24,12 +44,11 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Audio Equalizer")
 
 # Pfade zu den Audio-Dateien
-mp3_file = "C:/dev/python/jetson/modules/DeepJarvis_ivc_s60_sb70_se13_b_m2.mp3"
-wav_file = "C:/dev/python/jetson/modules/output.wav"
+mp3_file = "C:/dev/python/jetson/modules/media/DeepJarvis_ivc_s60_sb70_se13_b_m2.mp3"
+wav_file = "C:/dev/python/jetson/modules/media/output.wav"
 
 # Konvertiere MP3 nach WAV
 convert_mp3_to_wav(mp3_file, wav_file)
-print('CONVERT DONE', wav_file)
 
 # Audio-Datei öffnen
 wave_file = wave.open(wav_file, 'rb')

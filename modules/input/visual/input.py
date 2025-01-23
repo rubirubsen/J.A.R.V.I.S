@@ -1,22 +1,10 @@
-import speech_recognition as sr
+#VISUAL INPUTS MODULE
+
+import cv2  # OpenCV (for image processing)
+import tkinter as tk  # Tkinter (GUI library)
+from tkinter import messagebox # For displaying messages
 from screeninfo import get_monitors
 import pygetwindow as gw
-import cv2 
-
-def get_audio():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Sprechen Sie jetzt...")
-        audio = r.listen(source)
-        said = ""
-
-        try:
-            said = r.recognize_google(audio, language="de-DE")
-            print("Gesagt:", said)
-        except Exception as e:
-            print("Exception: " + str(e))
-
-    return said
 
 def get_monitors_info():
     monitors = get_monitors()
@@ -30,10 +18,6 @@ def get_windows_info():
     windows = gw.getAllWindows()
     windows_info = [f"{w.title} at ({w.left}, {w.top}, {w.width}, {w.height})" for w in windows]
     return windows_info
-
-def switch_lights_on():
-    print(f'lights are on')
-    return True
 
 def start_webcam():
     """

@@ -10,9 +10,12 @@ import ctypes
 import speech_recognition as sr
 from screeninfo import get_monitors
 import pygetwindow as gw
-from modules.output import handle_music, stop_music,speak,bilderSuchePrompt, bilderSucheExec
-from modules.input import get_audio
-from modules.sql import connect_to_mssql
+from modules.input.speech.input import get_audio
+from modules.processing.audio.audio_processor import *
+from modules.processing.speech.speech_processor import *
+from modules.processing.system.timeHandle import *
+from modules.processing.database.sql import connect_to_mssql
+from modules.output.media.media_output import *
 
 global model
 model = "gemma2:2b"

@@ -21,6 +21,13 @@ def generiere_algorithmus():
     chat_text, code_block = process_chat_and_code(algorithm_raw)
     return f"{chat_text}\n\n{code_block}"
 
+def zeige_algorithmus():
+    algorithmus = generiere_algorithmus()
+    root = tk.Tk()
+    root.withdraw()  # Versteckt das Hauptfenster
+    messagebox.showinfo("Generierter Algorithmus", algorithmus)
+    root.destroy()
+
 def zeige_algorithmus_tkinter():
     algorithmus = generiere_algorithmus()
     root = tk.Tk()

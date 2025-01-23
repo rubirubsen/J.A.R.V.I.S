@@ -1,9 +1,9 @@
 import os
 import json
-from modules.sql import connect_to_mssql
-from modules.output import speak
+from modules.processing.database.sql import connect_to_mssql
+from modules.processing.llm.ollama_process import construct_sentence
+from modules.output.speech.speaker import speak
 from dotenv import load_dotenv
-
 load_dotenv()
 
 def handle_einkaufsliste():
@@ -29,21 +29,6 @@ def handle_einkaufsliste():
     else:
         print("Fehler bei der Verbindung zur Datenbank.")
         return False
-
-def construct_sentence(results):
-    sentence = "Auf der Einkaufsliste stehen: "
-    for row in results:
-        id, item, count, note = row
-        if count == 1:
-            item_string = f"ein mal {item}"
-        else:
-            item_string = f"{count} mal {item}"
-            
-        if note:
-            item_string += f", Notiz: {note}"
-        sentence += item_string + ", "
-    sentence = sentence.rstrip(", ") + ". Und das ist alles."
-    return sentence
 
 def format_shopping_list_sql_results(results):
     formatted_results = []

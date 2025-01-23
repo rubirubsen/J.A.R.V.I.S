@@ -9,7 +9,6 @@ pygame.init()
 pygame.display.set_caption('JARVIS')
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
-mp3_long = "C:\dev\python\Jetson\jarvis.mp3"
 
 #PyAudio Initialisierung
 CHUNK = 1024

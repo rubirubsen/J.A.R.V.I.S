@@ -1,6 +1,7 @@
 from datetime import datetime
 from modules.input import * 
 from modules.output import * 
+import cv2 
 
 def detect_objects(frame, model):
     results = model(frame)  # YOLO-Modelldurchlauf auf dem Bild
