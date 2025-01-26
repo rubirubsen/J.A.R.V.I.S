@@ -7,7 +7,7 @@ from gtts import gTTS
 from playsound import playsound
 
 from modules.processing.llm.ollama import get_model_from_ollama
-from modules.output.speech.speaker import use_talker
+from modules.output.speech.speaker import *
 voice_id = "WgV8ZPI6TnwXGf9zkN2O"
 
 

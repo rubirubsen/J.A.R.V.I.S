@@ -3,13 +3,18 @@ import os
 import json
 import signal
 import sys
+from modules.output.speech.speaker import *
+from modules.helper.shared import visualizer
 
 ws = None
 wsurl = 'wss://rubizockt.de:3000?uid='+os.getenv('WSSECRET')+'&client_type=jarvis'
 
+artist_names = 'niemandem'
+track_name = 'Keine Musik'
+readAloutSwitch = 0
 def run_websocket():
     global ws
-    websocket.enableTrace(True)
+    websocket.enableTrace(False)
     ws = websocket.WebSocketApp(wsurl,
                                 on_message=on_message,
                                 on_error=on_error,
@@ -22,9 +27,15 @@ def run_websocket():
         ws.close()
         sys.exit(0)
         
-def stop_websocket():
+def stop_websocket(signum, frame):
     print("Stopping WebSocket...")
     ws.close()
+    visualizer.stop_visualizer()
+    sys.exit(1)
+def soft_stop():
+    print("AI fährt herunter")
+    ws.close()
+    visualizer.stop_visualizer()
     sys.exit(1)
 
 def on_message(ws, message):
@@ -34,8 +45,19 @@ def on_message(ws, message):
         
         # Prüfe, ob das Feld 'cmd' in den empfangenen Daten existiert
         if 'cmd' in message_data:
+            global artist_names, track_name  # Füge das hier hinzu, um globale Variablen zu verwenden
             if message_data['cmd'] == 'trackUpdate':
-                print("track update")
+                old_track = track_name
+                old_artist = artist_names
+                track_data = json.loads(message_data['data'])
+                track_name = track_data['track']['trackName']
+                artist_names = track_data['track']['artistNames']
+                
+                if track_name == old_track:
+                    return
+                else:
+                    print("+++ NOW PLAYING: "+ artist_names + " - " + track_name + ' +++')
+                
             elif message_data['cmd'] == 'trigger':
                 return
             elif message_data['cmd'] == 'chatMessage' and readAloutSwitch == 1:
@@ -69,3 +91,14 @@ def on_open(ws):
     ws.send('{"cmd":"welcomeCall", "data":"Hello Server!"}') #TODO: ordentliche Anmeldungsroutine implementieren
     print("WebSocket connection opened")
 
+def get_song_info():
+    global track_name,artist_names
+    return {
+        "track_name":track_name, 
+        "artist_names": artist_names
+    }
+
+def set_song_info(newArtist, newTrack):
+    global track_name, artist_names
+    track_name = newArtist
+    artist_names = newTrack

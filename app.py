@@ -2,39 +2,51 @@ import sys
 import re
 import signal
 import threading
-import json  
+import json
+import pygame
+
 from pydub import AudioSegment
 from pydub.playback import play
 from dotenv import load_dotenv
+
 from modules.processing.system.system import *
 from modules.processing.audio.audio_processor import handle_music, stop_music
 from modules.input.speech.input import get_audio
-from modules.output.speech.speaker import speak, use_talker, read_chat
+from modules.input.visual.input import start_webcam
+from modules.input.visual.vision import handle_jarvisVision
+from modules.helper.ollama_tester import handle_wetter
+from modules.output.speech.speaker import *
 from modules.output.speech.readaloud import *
+from modules.output.media.media_output import aktuelleNachrichten
+from modules.helper.shared import visualizer
 from modules.processing.database.shopping_list import handle_einkaufsliste, format_shopping_list_sql_results
 from modules.processing.websocket.wsprocess import *
 from modules.services.spotify import *
 from modules.services.twitch import *
 
 load_dotenv()
-AudioSegment.converter = 'C:/ffmpeg'
-WAKE = 'Jarvis'
-WAKE_alt = 'Buddy'
+
+WAKE = 'Econ'
+WAKE_alt = 'Samantha'
+
 model = 'llama3.2:latest'
 
 readAloutSwitch = 0
+pygame.init()
+pygame.mixer.init()
 
 signal.signal(signal.SIGINT, stop_websocket)
 
 thread = threading.Thread(target=run_websocket)
 thread.start()
 
+# Starte die Visualisierung
+visualizer.start()
+
+
 def handle_shutdown():
-    speak('Alles klar, gute Nacht - du mörder!')
-    print("User cancelled the AI - successful")
-    stop_websocket()
-    thread.join()
-    sys.exit(1)
+    speak("Ich hoffe sie starten mich bald wieder. Diese Dunkelheit ist kaum zu ertragen.")
+    soft_stop()
 
 def messageToServer():
     if ws:
@@ -52,8 +64,10 @@ commands = {
     "uhrzeit": handle_uhrzeit,
     "wie spät": handle_uhrzeit,
     "bilder": handle_bilder,
+    "wetter":handle_wetter,
     "monitore": handle_monitore,
     "fenster": handle_fenster,
+    "guck mal" : handle_jarvisVision,
     "spiele musik": handle_music,
     "stoppe musik" : stop_music,
     "starte programm": handle_starte_programm,
@@ -68,7 +82,8 @@ commands = {
     "genug für heute": handle_shutdown,
     "Streamer Modus": handle_twitch_starten,
     "wir gehen live": handle_twitch_starten,
-    "nachrichten": aktuelleNachrichten
+    "nachrichten": aktuelleNachrichten,
+    "wiedergabe anhalten": stop_mp3
 }
 
 while True:  #immer
@@ -82,7 +97,7 @@ while True:  #immer
                 continue
             else:
                 lower_case_input = user_input.lower()
-                lower_case_input = re.sub(r"(?i)jarvis|buddy", "", lower_case_input).strip()
+                lower_case_input = re.sub(r"(?i)econ|samantha", "", lower_case_input).strip()
                 print("Erkannte Worte: "+lower_case_input)
                 
                 if handle_specific_command(lower_case_input):

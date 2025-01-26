@@ -1,70 +1,59 @@
-from datetime import datetime
-from modules.input import * 
-from modules.output import * 
-import cv2 
-
-def detect_objects(frame, model):
-    results = model(frame)  # YOLO-Modelldurchlauf auf dem Bild
-    objects = results.names  # Die erkannten Objekte
-    detected_objects = []
-
-    for idx, conf in enumerate(results.xywh[0][:, -2]):
-        if conf > 0.5:  # Wir akzeptieren nur Objekte mit einer Konfidenz über 50%
-            detected_objects.append(results.names[int(results.xywh[0][idx, -1])])
-
-    return detected_objects
+import cv2
+print(cv2.getBuildInformation())
+import torch
+from yolov5 import YOLOv5
 
 def handle_jarvisVision():
-    cap = cv2.VideoCapture(1)  # Kamera 1 öffnen
+    # Check if CUDA is available for GPU acceleration
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Using device: {device}")
+
+    # Load YOLOv5 model (you need to download the weights first)
+    model = YOLOv5('yolov5s.pt')
+
+    # Open webcam (1) - secondary camera
+    cap = cv2.VideoCapture(1)
 
     if not cap.isOpened():
-        print("Fehler beim Öffnen der Kamera!")
-        return False
+        print("Error: Could not open webcam.")
+        return
 
-    seenObjects = set()  # Set, um die erkannten Objekte zu speichern
-    frame_count = 0  # Zähler für die Frames
+    # Set the resolution
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Fehler beim Abrufen des Frames!")
+            print("Failed to grab frame")
             break
 
-        # Erkennung von Objekten im aktuellen Frame mit YOLO
-        detected_objects = object_detection_with_gpu(frame)
+        # Convert the image from BGR to RGB since YOLO expects RGB
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Wenn wir im Bereich der ersten 5 Frames sind, fügen wir die Objekte zur Menge hinzu
-        if frame_count < 5:
-            seenObjects.update(detected_objects)
+        # Inference
+        # Note: Check if 'predict' is the correct method for your version of YOLOv5
+        # If 'predict' doesn't work, refer to documentation for the correct method
+        results = model.predict(img)
 
-        # Zeige den Webcam-Stream
-        cv2.imshow("Jarvis Webcam", frame)
+        # Process results
+        for *xyxy, conf, cls in results.xyxy[0].cpu().numpy():
+            # Draw a rectangle around the detected objects
+            x1, y1, x2, y2 = map(int, xyxy)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        # Erhöhe die Frame-Anzahl
-        frame_count += 1
+        # Display the resulting frame
+        cv2.imshow('Object Detection', frame)
 
-        # Beende bei "q"
+        # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    # Release the capture
     cap.release()
     cv2.destroyAllWindows()
-
-    # Wenn wir nach den ersten 5 Frames oder beim Beenden die Objekte sprechen wollen
-    translated_objects = translate_objects(list(seenObjects))
-    say_detected_objects(translated_objects)
-
     return True
 
-def translate_objects(objects):
-    # Wörterbuch von Englisch nach Deutsch
-    object_translation = {
-        "Cup": "Tasse",
-        "Pen": "Stift",
-        "Box": "Schachtel",
-        "Plate": "Teller",
-        # Füge hier mehr Objekte und deren Übersetzungen hinzu
-    }
-
-    # Übersetze die Objekte
-    return [object_translation.get(obj, obj) for obj in objects]
+# To use the function
+if __name__ == "__main__":
+    handle_jarvisVision()  # Changed to match the function name

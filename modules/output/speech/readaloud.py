@@ -1,6 +1,6 @@
 #READALOUDD MODULE FOR CHATREADER
 
-from modules.output.speech.speaker import speak
+from modules.output.speech.speaker import *
 
 def handle_vorlesen_an():
     global readAloutSwitch

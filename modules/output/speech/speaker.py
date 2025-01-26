@@ -8,14 +8,20 @@ import uuid
 import queue
 import dotenv
 import os
+import pygame
+import time
+import sys
+
+from pydub import AudioSegment
 from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
+from modules.helper.shared import visualizer
 
 dotenv.load_dotenv('../.env')
 voice_id = "WgV8ZPI6TnwXGf9zkN2O"
 chatter_voice_id = ""
-model = "llama3"
+model = "llama3.2:latest"
 message_queue = queue.Queue()
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
@@ -23,6 +29,15 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 client = ElevenLabs(
     api_key=ELEVENLABS_API_KEY,
 )
+
+def is_file_in_use(file_path):
+    try:
+        with open(file_path, 'r+'):
+            print('File is open')
+            return False
+    except IOError:
+        print('File is closed')
+        return True
 
 def use_talker(prompt: str, model: str):
     api_url = "http://127.0.0.1:11434/api/generate"
@@ -44,14 +59,55 @@ def use_talker(prompt: str, model: str):
     answer = response_json['response']
     return answer
 
-def speak(answer: str):
-    # text_to_speech(answer)
+def speak(text):
+    print('Speaking: ', text)
+    file_path = 'C:/dev/python/jetson/antwort.wav'
+
+    # Sicherstellen, dass die Datei existiert
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    # Initialisiere die pyttsx3-Engine
+    engine = pyttsx3.init()
+
+    try:
+        # Setze die Sprache und Stimme (optional)
+        engine.setProperty('rate', 175)
+        engine.setProperty('voice', 'Hans RSI Harpo 22kHz')
+
+        # Speichern der Sprachausgabe als WAV-Datei
+        engine.save_to_file(text, file_path)
+        engine.runAndWait()  # Warten bis die Sprachausgabe abgeschlossen ist
+    finally:
+        # Stelle sicher, dass die Engine gestoppt wird
+        engine.stop()
+
+    # Datei abspielen
+    visualizer.playFile(file_path)
+    
+def old_speak(answer: str):
+    print(answer)
+    mp3_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mp3')
+    wav_file = 'answer.wav'
+    file_path = os.path.join(mp3_folder, wav_file)
+    
+
+    # Initialisiere pyttsx3
     engine = pyttsx3.init()
     engine.setProperty('rate', 175)
     engine.setProperty('voice', 'Hans RSI Harpo 22kHz')
-    engine.say(answer)
+    engine.save_to_file(answer, file_path)
     engine.runAndWait()
+    engine.stop()
+    
+    print(f"WAV-Datei gespeichert unter {file_path}")
 
+    # Visualizer abspielen
+    try:
+        visualizer.playFile(file_path)
+    except pygame.error as e:
+        print(f"Fehler beim Abspielen der WAV-Datei: {e}")
+        
 def text_to_speech(text: str):
     # Calling the text_to_speech conversion API with detailed parameters
     response = client.text_to_speech.convert(

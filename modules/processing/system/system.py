@@ -4,20 +4,26 @@ import pyodbc
 import subprocess
 import time
 import pyautogui
+import win32gui
 import webbrowser
 import random
 import ctypes
+import win32gui
 import speech_recognition as sr
 from screeninfo import get_monitors
 import pygetwindow as gw
 from modules.input.speech.input import get_audio
 from modules.processing.audio.audio_processor import *
+from modules.processing.visuals.imaging import *
 from modules.processing.speech.speech_processor import *
 from modules.processing.system.timeHandle import *
 from modules.processing.database.sql import connect_to_mssql
-from modules.output.media.media_output import *
+from modules.output.media.media_output import play_mp3, stop_mp3
+from modules.output.speech.speaker import *
+
 
 global model
+
 model = "gemma2:2b"
 
 def check_command(input_text, *keywords):
@@ -179,7 +185,7 @@ def handle_wechsel_sprachmodell():
             speak("Modell wurde angepasst")
             loop = False
         elif any(word in model_choice for word in ["casual", "unterhaltung", "smalltalk", "Small talk"]):
-            model = "llama3"
+            model = "llama3.2:latest"
             speak("Ok, ab jetzt also gemütlich.")
             loop = False
         elif any(word in model_choice for word in ["Gangster", "Zauberer", "Magie", "Zauberei"]):
@@ -202,24 +208,37 @@ def handle_specific_command(command: str):
     elif "musik anhalten" in command:
         stop_music()
         return True
-    elif "musik" in command:
-        handle_music()  # Hier entsprechenden Programmnamen einfügen
-        return True
+
+    
     # Weitere spezifische Befehle hier ergänzen...
 
     return False  # Befehl nicht erkannt
 
+def bring_window_to_front(windowTitle: str):
+    for window in gw.getWindowsWithTitle(windowTitle):
+        if windowTitle.lower() in window.title.lower():  # Wenn der Fenstertitel übereinstimmt
+            try:
+                hwnd = window._hWnd  # Handle des Fensters
+                win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)  # Fenster wiederherstellen, falls minimiert
+                win32gui.SetForegroundWindow(hwnd)  # Fenster in den Vordergrund bringen
+                print(f"Fenster '{window.title}' wurde in den Vordergrund gebracht.")
+                break
+            except Exception as e:
+                print(f"Fehler beim Bringen des Fensters in den Vordergrund: {e}")
+
+def maximize_and_activate():
+    for window in gw.getWindowsWithTitle(''):
+        if "chrome" in window.title.lower() or "firefox" in window.title.lower() or "edge" in window.title.lower():
+            hwnd = window._hWnd
+            win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)  # Maximieren
+            win32gui.SetForegroundWindow(hwnd)  # In den Vordergrund bringen
+            break
+        
 def handle_bilder():
     
     searchterm = bilderSuchePrompt()
     searchterm2 = bilderSucheExec(searchterm)
-    search_url = "https://www.google.com/search?q=" + searchterm2 + "&tbm=isch"
-    webbrowser.open(search_url)
-    for window in gw.getWindowsWithTitle(''):
-        if "Google Chrome" in window.title or "Mozilla Firefox" in window.title or "Microsoft Edge" in window.title:
-            window.activate()
-            break
-    speak('Sollten sie noch etwas brauchen sagen sie bescheid.')
+    open_google_image_search(searchterm)
     return True
 
 def handle_fenster():
@@ -234,3 +253,11 @@ def handle_monitore():
     print("Fenster: ")
     print(fenster)
     return True
+
+def open_google_image_search(searchterm):
+    searchterm_cleaned = searchterm.replace(" ", "+")  # Leerzeichen durch "+" ersetzen
+    url = f"https://www.google.com/search?hl=de&tbm=isch&q={searchterm_cleaned}"
+
+    webbrowser.open(url,1,True)
+    bring_window_to_front('firefox')
+    

@@ -1,7 +1,7 @@
 #OLLAMA MAIN MODULE
 import requests
 
-from modules.output.speech.speaker import use_talker
+from modules.output.speech.speaker import *
 
 def get_model_from_ollama():
     try:

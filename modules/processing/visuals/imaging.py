@@ -1,5 +1,35 @@
 #IMAGE PROCESSOR MODULE
+import json
+import requests
+from modules.output.speech.speaker import *
+from modules.input.speech.input import get_audio
+import re
 
+def extract_json_from_response(response_text):
+    """
+    Extrahiert JSON-Inhalt aus einem möglichen Markdown-Format.
+    """
+    try:
+        # Suche nach JSON-ähnlichem Inhalt
+        json_match = re.search(r"{.*?}", response_text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(0))
+        else:
+            raise ValueError("Kein gültiger JSON-Inhalt gefunden.")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Fehler beim Parsen des JSON: {e}")
+
+def parse_clean_response(raw_response):
+    try:
+        # Entferne mögliche Backticks und überprüfe auf JSON-ähnliches Format
+        json_match = re.search(r"{.*}", raw_response, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(0))
+        else:
+            raise ValueError("Kein JSON-Inhalt in der Antwort gefunden.")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Ungültiges JSON: {e}")
+    
 def bilderSuchePrompt():
     """
     Funktion zur Erstellung einer generativen Abfrage für die Bildersuche.
@@ -45,16 +75,11 @@ def bilderSuchePrompt():
         return None
 
 def bilderSucheExec(searchterm):
-    """
-    Funktion zur Verarbeitung des Suchbegriffs.
-    Ruft die API auf, um den Suchbegriff in ein sauberes JSON-Format zu bringen.
-    """
     url = "http://localhost:11434/api/generate"
 
-    # Payload für die Anfrage
     payload = json.dumps({
         "model": "gemma2:2b",
-        "prompt": f"{searchterm}. Filtere diese Aussage nach einem Suchobjekt und gib mir dieses als Wert 'searchTerm' in einem JSON zurück. Keine weiteren Kommentare, nur das JSON.",
+        "prompt": f"Filtere den folgenden Suchbegriff: '{searchterm}'. Gib mir den gesamten Suchbegriff als Wert 'searchTerm' im JSON zurück. Keine weiteren Kommentare, nur das JSON.",
         "stream": False
     })
     headers = {
@@ -62,24 +87,20 @@ def bilderSucheExec(searchterm):
     }
 
     try:
-        # Anfrage an den lokalen API-Endpunkt
         response = requests.post(url, headers=headers, data=payload)
         response_data = response.json()
 
-        # Ausgabe und Verarbeitung des Ergebnisses
-        print("Antwort von API (Exec):", response_data)
+        print("Antwort von Ollama:", response_data)  # Debug
 
         if "response" not in response_data:
             raise KeyError("Die API-Antwort enthält keinen 'response'-Schlüssel.")
 
-        # Entferne Markdown-Backticks und parse das JSON
+        # Bereinige und parse die Antwort
         raw_response = response_data["response"]
-        clean_response = raw_response.strip("```json").strip("```").strip()
-        print('+++CLEAN+++: ',clean_response)
-        json_response = json.loads(clean_response)
+        cleaned_data = extract_json_from_response(raw_response)
 
         # Extrahiere den Suchbegriff
-        searchterm_cleaned = json_response.get("searchTerm")
+        searchterm_cleaned = cleaned_data.get("searchTerm")
 
         if not searchterm_cleaned:
             raise ValueError("Kein Suchobjekt gefunden.")
@@ -97,4 +118,4 @@ def bilderSucheExec(searchterm):
         return None
     except json.JSONDecodeError as e:
         print(f"Fehler beim JSON-Parsing: {e}")
-        return None,
+        return None

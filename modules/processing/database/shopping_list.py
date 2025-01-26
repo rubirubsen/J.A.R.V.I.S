@@ -2,7 +2,7 @@ import os
 import json
 from modules.processing.database.sql import connect_to_mssql
 from modules.processing.llm.ollama_process import construct_sentence
-from modules.output.speech.speaker import speak
+from modules.output.speech.speaker import *
 from dotenv import load_dotenv
 load_dotenv()
 

@@ -76,7 +76,3 @@ def zeige_algorithmus_pygame():
 
     pygame.quit()
 
-# Ablauf: tkinter -> pygame
-zeige_algorithmus_tkinter()
-time.sleep(1)  # Warten für einen reibungslosen Übergang
-zeige_algorithmus_pygame()

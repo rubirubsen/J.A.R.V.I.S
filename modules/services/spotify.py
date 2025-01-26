@@ -1,19 +1,13 @@
-from modules.output import *
+from modules.output.speech.speaker import *
+from modules.processing.websocket.wsprocess import *
 
-songTitle = ''
-songArtist = ''
-
-def set_title_playing(title, artist):
-    global songTitle
-    songTitle= title
-    global songArtist
-    songArtist= artist
-    return
 
 def get_title_playing():
-    global songTitle
-    global songArtist
-    speak(f'Wir hören {songTitle} von {songArtist}. Gefällt es Dir?')
+    song_info = get_song_info()
+    songTitle = song_info["track_name"]
+    songArtists = song_info["artist_names"]
+
+    speak(f'Wir hören {songTitle} von {songArtists}. Gefällt es Dir?')
     return True
 
 def get_playback_state():
