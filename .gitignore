@@ -6,3 +6,4 @@ __pycache__/
 .gitignore
 modules/helper/emails.json
 .vscode/
+test.py
