@@ -1,0 +1,27 @@
+{
+  "name": "Weather Inquiry",
+  "description": "Ermöglicht die Abfrage des aktuellen Wetters für eine Stadt durch Integration mit dem OpenWeather API.",
+  "type": "http_api",
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Holt aktuelle Wetterdaten für eine Stadt.",
+      "url": "http://api.openweathermap.org/data/2.5/weather",
+      "method": "GET",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": {
+        "q": "{city}",
+        "appid": "1afe3cf1fbefb54c8b35e1ecbf355b9c",
+        "units": "metric",
+        "lang": "de"
+      },
+      "response_path": {
+        "city_name": "$.name",
+        "temperature": "$.main.temp",
+        "description": "$.weather[0].description"
+      }
+    }
+  ]
+}

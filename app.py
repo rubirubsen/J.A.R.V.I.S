@@ -4,6 +4,13 @@ import signal
 import threading
 import json
 import pygame
+import torch
+print(torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("CUDA is available. Device:", torch.cuda.get_device_name(0))
+else:
+    print("CUDA is not available. Check installation.")
+
 
 from pydub import AudioSegment
 from pydub.playback import play
@@ -14,7 +21,7 @@ from modules.processing.audio.audio_processor import handle_music, stop_music
 from modules.input.speech.input import get_audio
 from modules.input.visual.input import start_webcam
 from modules.input.visual.vision import handle_jarvisVision
-from modules.helper.ollama_tester import handle_wetter
+from modules.helper.ollama import handle_wetter
 from modules.output.speech.speaker import *
 from modules.output.speech.readaloud import *
 from modules.output.media.media_output import aktuelleNachrichten
@@ -106,6 +113,9 @@ while True:  #immer
                 # Check if command exists in dictionary and execute it
                 for command, handler in commands.items():
                     if re.search(r'\b' + re.escape(command) + r'\b', lower_case_input):
+                        if(command == "wetter"):
+                            handle_wetter(lower_case_input)
+                            break
                         if handler():
                             break
                     
@@ -116,5 +126,6 @@ while True:  #immer
                     
     except KeyboardInterrupt:
         print("User cancelled the AI - successful")
+        visualizer.stop_visualizer()
         thread.join()
         sys.exit(1)

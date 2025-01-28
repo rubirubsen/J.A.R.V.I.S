@@ -60,7 +60,7 @@ def use_talker(prompt: str, model: str):
     return answer
 
 def speak(text):
-    print('Speaking: ', text)
+    text = use_talker(f'Benutze Deine eigenen Wort um diesen Satz zu sagen: {text}. Nur das, keine Anmerkungen.',model)
     file_path = 'C:/dev/python/jetson/antwort.wav'
 
     # Sicherstellen, dass die Datei existiert
