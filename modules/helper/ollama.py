@@ -22,6 +22,31 @@ def get_weather(city: str):
     else:
         return {"error": f"Fehler beim Abrufen der Wetterdaten: {response.status_code}"}
 
+def get_current_time():
+    """
+    Gibt den aktuellen Wochentag die aktuelle Uhrzeit aus. 
+    """
+    H = datetime.now().hour
+    M = datetime.now().minute
+    D = datetime.now().day
+    Day = ''
+    match D:
+        case 1:
+            Day = "Montag"
+        case 2:
+            Day = "Dienstag"
+        case 3:
+            Day = "Mittwoch"
+        case 4: 
+            Day = "Donnerstag"
+        case 5: 
+            Day = "Freitag"
+        case 6:
+            Day = "Samstag"
+        case 7:
+            Day = "Sonntag"
+    timenow = f"Es ist {Day}. {H} Uhr und {M} Minuten"
+    return timenow
 
 def ollama_request(user_input: str):
     """
@@ -29,7 +54,12 @@ def ollama_request(user_input: str):
     Ruft dann Wetterdaten für die angegebene Stadt ab.
     """
     # Anfragen-Nachricht für das Modell vorbereiten
-    messages = [{"role": "user", "content": user_input}]
+    messages = [
+        {
+            "role": "user", 
+            "content": user_input
+        }
+    ],
     tools = [
         {
             "name": "get_weather",
@@ -43,6 +73,18 @@ def ollama_request(user_input: str):
                     }
                 },
                 "call": get_weather,  # Referenz auf die Funktion
+            },
+        },
+        {
+            "name":"get_current_time",
+            "description":"Gibt den aktuellen Wochentag und die aktuelle Uhrzeit aus",
+            "function": {
+                "name": "get_current_time",
+                "parameters":{
+                    
+                }
+                ,
+                "call": get_current_time
             },
         }
     ]
@@ -65,11 +107,7 @@ def ollama_request(user_input: str):
         # Fehlerbehandlung für mögliche Ausnahmen während der API-Anfrage oder Verarbeitung
         return {"error": f"Ein Fehler ist aufgetreten: {str(e)}"}
 
-
-def handle_wetter(user_input):
-    """
-    Hauptfunktion: Fragt den Benutzer nach Wetterdetails und verarbeitet die Anfrage.
-    """
+def send_to_ollama(user_input):
     
     print(user_input)
     

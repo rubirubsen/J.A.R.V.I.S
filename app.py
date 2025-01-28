@@ -21,7 +21,7 @@ from modules.processing.audio.audio_processor import handle_music, stop_music
 from modules.input.speech.input import get_audio
 from modules.input.visual.input import start_webcam
 from modules.input.visual.vision import handle_jarvisVision
-from modules.helper.ollama import handle_wetter
+from modules.helper.ollama import send_to_ollama
 from modules.output.speech.speaker import *
 from modules.output.speech.readaloud import *
 from modules.output.media.media_output import aktuelleNachrichten
@@ -68,10 +68,7 @@ commands = {
     "aktives fenster minimieren": aktives_fenster_minimieren,
     "deaktivieren": handle_deaktivieren,
     "liste": handle_einkaufsliste,
-    "uhrzeit": handle_uhrzeit,
-    "wie spät": handle_uhrzeit,
     "bilder": handle_bilder,
-    "wetter":handle_wetter,
     "monitore": handle_monitore,
     "fenster": handle_fenster,
     "guck mal" : handle_jarvisVision,
@@ -92,6 +89,11 @@ commands = {
     "nachrichten": aktuelleNachrichten,
     "wiedergabe anhalten": stop_mp3
 }
+commands_ollama_tools={
+    "uhrzeit",
+    "wie spät",
+    "wetter",
+}
 
 while True:  #immer
     try:  
@@ -107,22 +109,32 @@ while True:  #immer
                 lower_case_input = re.sub(r"(?i)econ|samantha", "", lower_case_input).strip()
                 print("Erkannte Worte: "+lower_case_input)
                 
-                if handle_specific_command(lower_case_input):
-                    continue  # Springe zur nächsten Iteration der Schleife
-                
-                # Check if command exists in dictionary and execute it
-                for command, handler in commands.items():
+                            # Spezifischen Befehl behandeln
+            if handle_specific_command(lower_case_input):
+                continue
+            
+            # Befehle ausführen, falls erkannt
+            command_executed = False
+
+            for command, handler in commands.items():
+                if re.search(r'\b' + re.escape(command) + r'\b', lower_case_input):
+                    if handler():
+                        command_executed = True
+                        break
+            
+            # Ollama-Tools-Befehle
+            if not command_executed:
+                for command in commands_ollama_tools:
                     if re.search(r'\b' + re.escape(command) + r'\b', lower_case_input):
-                        if(command == "wetter"):
-                            handle_wetter(lower_case_input)
-                            break
-                        if handler():
-                            break
-                    
-                else:
-                    answer = use_talker(lower_case_input, model)
-                    print("::AI:: " + answer)
-                    speak(answer)
+                        send_to_ollama(lower_case_input)
+                        command_executed = True
+                        break
+            
+            # Fallback: Kein spezifischer Befehl erkannt
+            if not command_executed:
+                answer = use_talker(lower_case_input, model)
+                print("::AI:: " + answer)
+                speak(answer)
                     
     except KeyboardInterrupt:
         print("User cancelled the AI - successful")
